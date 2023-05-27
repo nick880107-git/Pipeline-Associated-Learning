@@ -1,0 +1,29 @@
+{
+    "batch_size": 256,
+    "min_len": 1,
+    "pretrained_model": "glove",
+    "embedding_dim": 300,
+    "vocab_size": 30000,
+    "x_hid": 256,
+    "y_hid": 128,
+    "n_heads": 6,
+    "n_layers": 1,
+    "act": "tanh",
+    "dropout": 0.3,
+    "lr": 0.00025,
+    "epochs": 20,
+    "bp_gpu_list": [
+        "cuda:0",
+        "cuda:1",
+        "cuda:2",
+        "cuda:3",
+        "cuda:3"
+    ],
+    "al_gpu_list": [
+        "cuda:0",
+        "cuda:1",
+        "cuda:2",
+        "cuda:3"
+    ],
+    "outputpath": "./result"
+}
