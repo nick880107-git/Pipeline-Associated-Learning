@@ -1,40 +1,40 @@
 # Pipeline Associated Learning
-Inspired by [Associated Learning](https://github.com/Hibb-bb/AL) ([ICLR 2022](https://in.ncu.edu.tw/~hhchen/academic_works/wu22-associated.pdf)), we propose Pipeline AL and do lots of experiments within performance analysis tools to complement the performance of AL on parallel training. Our method shows that AL can relieve the backward-locking issue via pipieline and speed up each training epoch.
+Associated learning ([ICLR 2022](https://in.ncu.edu.tw/~hhchen/academic_works/wu22-associated.pdf)) ([Code](https://github.com/Hibb-bb/AL))  can theoretically enhance training efficiency through pipelining.  However, the original proposal lacks the implementation of the pipeline.  This repository implements the pipelined associated learning (pipeline AL) to demonstrate its ability to address the backward-locking issue and increase training throughput.
 
 ## Environments
-We use image **pytorch-22.08-py3** from TWCC refer to [here](https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/rel_22-08.html#rel_22-08), the version of some main packages are below:
+We use image [**pytorch-22.08-py3**](https://docs.nvidia.com/deeplearning/frameworks/pytorch-release-notes/rel_22-08.html#rel_22-08) from [TWCC](https://www.twcc.ai/).  The versions of the main packages are listed below:
 - Python 3.8.13
 - CUDA 11.7.1
 - Pytorch 1.13
 
 ## Datasets
-In our experiement, we use following datasets to test our training performance:
+We use the following datasets for experiments.
 - tinyImageNet
 - AGNews
 - Dbpedia
 - IMDb
 
-For tinyImageNet, download [tiny-imagenet-200.zip](https://drive.google.com/file/d/1R5QMeXAL_8XYqaDiGFFFoM1IwiJ5ZcBJ/view?usp=sharing) and unzip it directly if you want to run this dataset on CV task.
+If you want to experiment with tinyImageNet, download [tiny-imagenet-200.zip](https://drive.google.com/file/d/1R5QMeXAL_8XYqaDiGFFFoM1IwiJ5ZcBJ/view?usp=sharing) and unzip it.
 
-For IMDb, download [IMDB_Dataset.csv](https://drive.google.com/file/d/1GRyOQs6TT0IXKDyha6zNjinmvREKyeuV/view?usp=sharing) to the root of repo if you want to run this dataset on NLP task.
+If you want to experiment with IMDb, download [IMDB_Dataset.csv](https://drive.google.com/file/d/1GRyOQs6TT0IXKDyha6zNjinmvREKyeuV/view?usp=sharing) to the root of the repo.
 
-For AGNews/Dbpedia, we use datasets provide by pytorch, so you don't need to download additional files.
+AGNews and Dbpedia are provided by PyTorch.
 
 ## Embeddings
-Please download Glove [here](https://drive.google.com/file/d/17UaPMnhIjXaDLZAfOUaZ79Ev6NRhRISA/view?usp=sharing) and unzip it directly.
+Please download Glove [here](https://drive.google.com/file/d/17UaPMnhIjXaDLZAfOUaZ79Ev6NRhRISA/view?usp=sharing) and unzip it.
 
 ## Execution
-For CV task, please run:
+For CV task (in our case, tinyImageNet), please run:
 ```
 python cvmain.py <dataset> <model> -r <repeat times>
 ```
 
-For NLP task, please run:
+For NLP task (in our case, AGNews, Dbpedia, and IMDb), please run:
 ```
 python nlpmain.py <dataset> <model> -r <repeat times>
 ```
 
-To set hyperparameters, please modify **cvconfig.json** or **nlpconfig.json**, and make sure the length of bp_gpu_list / al_gpu_list are equal to number of model layers:
+To set up the hyperparameters, please modify **cvconfig.json** or **nlpconfig.json**, and make sure the length of bp_gpu_list / al_gpu_list equals the number of model layers:
 
 | Model        | BP     | AL      |
 |--------------|--------|---------|
@@ -43,13 +43,13 @@ To set hyperparameters, please modify **cvconfig.json** or **nlpconfig.json**, a
 | LSTM         | 5      | 4       |
 | Transformer  | 5      | 4       |
 
-Other settings can find in our thesis.
+Other settings can be found in our thesis.
 
 ## Pipeline AL with your own BP model
-We provide ALPackage for you to simply transfer layers of BP model into layers of AL model, you can simply init an AL layer with your function f, g, b, h, or override behavior of ENC, AE and AL class if needed. Pseudocode below may help you know how to use ALPackage.
+We provide ALPackage to simply the process of transferring from a BP model into its AL form. You can initiate an AL layer with your functions f, g, b, h, or override ENC, AE, and AL classes if needed. The pseudocode below may help you familiarize with the use of the ALPackage.
 
-### Transfer BP model to AL model
-Suggest you have a BP model below:
+### Transfer BP model to AL form
+Suppose you have a BP model below:
 ```
 class MyBPModel(nn.Module):
     def __init__(self):
@@ -67,15 +67,15 @@ class MyBPModel(nn.Module):
         return x
 ```
 
-You can divide BPModel into several AL layers' f function, and design your g, b, h function:
+You can divide BPModel into several f functions in AL and design your g, b, h function:
 ```
-# For example, we divide original BPModel into 4 layers, and use simple Linear() to init b, g, h function
+# For example, we divide the original BPModel into 4 layers and use simple Linear() to init b, g, h function
 f = MyBPLayer()
 b = Linear()
 g = Linear()
 h = Linear()
 
-# import ENC, AE, AL layers in ALPackage and construct your AL model
+# Import ENC, AE, and AL layers in ALPackage and construct your AL model
 from ALPackage.base import *
 enc = ENC(f, b)
 ae = AE(g, h)
@@ -95,16 +95,16 @@ class MyALModel(nn.Module):
         x, y = self.l4(x, y)
 ```
 ### Method in class **AL**
-We already defined some method in AL layer:
-- forward(x, y)         # given x and y, do forward
-- backward()            # do backward to calculate local loss and gradient of this AL layer
+We already defined some methods in the AL layer:
+- forward(x, y)         # given x and y, execute forward
+- backward()            # execute backward to calculate the local loss and gradient of this AL layer
 - update()              # update trainable parameters in this AL layer 
 - inference(x, path)    # use for inference, path indicates how to pass x
 
-To train AL model, called forward/backward/update layer by layer like forward() in MyALModel
-For inference, called inference and decide your inference path (f, b, h):
+To train the AL model, call forward/backward/update layer by layer like forward() in MyALModel
+For inference, call inference and decide your inference path (f, b, h):
 ```
-# For example, if we want to get full inference path of MyALModel:
+# For example, if we want to get the full inference path of MyALModel:
 model = MyALModel()
 model.l1.inference(x, 'f')
 model.l2.inference(x, 'f')
@@ -118,7 +118,7 @@ model.l1.inference(x, 'h')
 ```
 
 ### Pipeline your AL (AL-FM)
-In our research, we use model parallelism and multithread to pipeline AL and further propose AL-FM. To make AL-FM model, you need to prepare your AL model and specified them to correct device in forward / inference:
+In our research, we use model parallelism and multithread to pipeline AL and further propose AL-FM. To create the AL-FM model, you need to prepare your AL model and specify each layer to the correct device in forward / inference:
 ```
 model = MyALModel()
 model.l1.to('cuda:0')
@@ -132,12 +132,12 @@ x, y = model.l2(x.to('cuda:1'), y.to('cuda:1'))
 x, y = model.l3(x.to('cuda:2'), y.to('cuda:2'))
 x, y = model.l4(x.to('cuda:3'), y.to('cuda:3'))
 
-# or you can simply use set_device() from utils.py in my repo if you don't override my AL model  
+# or you can use set_device() from utils.py in the repo if you don't override the AL model  
 model = MyALModel()
 set_device(model, ['cuda:0','cuda:1','cuda:2','cuda:3'])
 ```
 
-Then use multithread to do training process:
+Then use multithread for training:
 ```
 import threading
 thread = []
@@ -150,4 +150,4 @@ for layer in model:
 
 ```
 
-For more information, please refer to our thesis, or take a look at model in ALPackage.
+For more information, please refer to our thesis, or take a look at the model in ALPackage.
